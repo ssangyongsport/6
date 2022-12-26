@@ -6,47 +6,48 @@ import Page from 'components/Page';
 import { media } from 'utils/media';
 import { getAllPosts } from 'utils/postsFetcher';
 
-export default function BlogIndexPage({ posts }: InferGetStaticPropsType<typeof getStaticProps>) {
-  return (
-    <Page
-      title="雙龍體育部落格"
-      description="歡迎來到雙龍體育BLOG,在此找到雙龍體育更新,新聞等..."
-    >
-      <CustomAutofitGrid>
-        {posts.map((singlePost, idx) => (
-          <ArticleCard
-            key={singlePost.slug}
-            title={singlePost.meta.title}
-            description={singlePost.meta.description}
-            imageUrl={singlePost.meta.imageUrl}
-            slug={singlePost.slug}
-          />
-        ))}
-      </CustomAutofitGrid>
-    </Page>
-  );
+export default function Blog({posts}){
+    return <main>
+        {posts.map(post => {
+            //extract slug and frontmatter
+            const {slug, frontmatter} = post
+            //extract frontmatter properties
+            const {title, author, category, date, bannerImage, tags} = frontmatter
+
+            //JSX for individual blog listing
+            return <article key={title}>
+                <Link href={`/posts/${slug}`}>
+                    <h1>{title}</h1>
+                </Link>
+                <h3>{author}</h3>
+                <h3>{date}</h3>
+            </article>
+        })}
+    </main>
 }
 
-const CustomAutofitGrid = styled(AutofitGrid)`
-  --autofit-grid-item-size: 40rem;
 
-  ${media('<=tablet')} {
-    --autofit-grid-item-size: 30rem;
-  }
+//Generating the Static Props for the Blog Page
+export async function getStaticProps(){
+    // get list of files from the posts folder
+    const files = fs.readdirSync('posts');
 
-  ${media('<=phone')} {
-    --autofit-grid-item-size: 100%;
-  }
+    // get frontmatter & slug from each post
+    const posts = files.map((fileName) => {
+        const slug = fileName.replace('.md', '');
+        const readFile = fs.readFileSync(`posts/${fileName}`, 'utf-8');
+        const { data: frontmatter } = matter(readFile);
 
-  .article-card-wrapper {
-    max-width: 100%;
-  }
-`;
+        return {
+          slug,
+          frontmatter,
+        };
+    });
 
-export async function getStaticProps() {
-  return {
-    props: {
-      posts: await getAllPosts(),
-    },
-  };
+    // Return the pages static props
+    return {
+        props: {
+          posts,
+        },
+    };
 }
