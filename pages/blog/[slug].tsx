@@ -15,6 +15,7 @@ import OpenGraphHead from 'views/SingleArticlePage/OpenGraphHead';
 import ShareWidget from 'views/SingleArticlePage/ShareWidget';
 import StructuredDataHead from 'views/SingleArticlePage/StructuredDataHead';
 import { Posts, PostsDocument, Query } from '.tina/__generated__/types';
+import fs from 'fs';
 
 export default function Post({frontmatter, content}) {
 
