@@ -16,48 +16,45 @@ import ShareWidget from 'views/SingleArticlePage/ShareWidget';
 import StructuredDataHead from 'views/SingleArticlePage/StructuredDataHead';
 import { Posts, PostsDocument, Query } from '.tina/__generated__/types';
 
-export default function Blog({posts}){
-    return <main>
-        {posts.map(post => {
-            //extract slug and frontmatter
-            const {slug, frontmatter} = post
-            //extract frontmatter properties
-            const {title, author, category, date, bannerImage, tags} = frontmatter
+export default function Post({frontmatter, content}) {
 
-            //JSX for individual blog listing
-            return <article key={title}>
-                <Link href={`/posts/${slug}`}>
-                    <h1>{title}</h1>
-                </Link>
-                <h3>{author}</h3>
-                <h3>{date}</h3>
-            </article>
-        })}
+    const {title, author, category, date, bannerImage, tags} = frontmatter
+
+    return <main>
+        <img src={bannerImage}/>
+        <h1>{title}</h1>
+        <h2>{author} || {date}</h2>
+        <h3>{category} || {tags.join()}</h3>
+        <div dangerouslySetInnerHTML={{ __html: md().render(content) }} />
     </main>
 }
 
-
-//Generating the Static Props for the Blog Page
-export async function getStaticProps(){
-    // get list of files from the posts folder
-    const files = fs.readdirSync('posts');
-
-    // get frontmatter & slug from each post
-    const posts = files.map((fileName) => {
-        const slug = fileName.replace('.md', '');
-        const readFile = fs.readFileSync(`posts/${fileName}`, 'utf-8');
-        const { data: frontmatter } = matter(readFile);
-
-        return {
-          slug,
-          frontmatter,
-        };
-    });
-
-    // Return the pages static props
-    return {
-        props: {
-          posts,
-        },
-    };
+// Generating the paths for each post
+export async function getStaticPaths() {
+  // Get list of all files from our posts directory
+  const files = fs.readdirSync("posts");
+  // Generate a path for each one
+  const paths = files.map((fileName) => ({
+    params: {
+      slug: fileName.replace(".md", ""),
+    },
+  }));
+  // return list of paths
+  return {
+    paths,
+    fallback: false,
+  };
 }
+
+
+// Generate the static props for the page
+export async function getStaticProps({ params: { slug } }) {
+    const fileName = fs.readFileSync(`posts/${slug}.md`, 'utf-8');
+    const { data: frontmatter, content } = matter(fileName);
+    return {
+      props: {
+        frontmatter,
+        content,
+      },
+    };
+  }
